@@ -11,6 +11,8 @@ services:
     tty: true
     volumes:
       - ./backend:/app
+      - ./docker/backend/.air.toml:/app/.air.toml
+    command: sh -c "go mod tidy && air -c .air.toml"
 
   blog_frontend:
     build:
