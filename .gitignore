@@ -37,3 +37,4 @@ next-env.d.ts
 backend/tmp/
 backend/post_cmd.txt
 backend/pre_cmd.txt
+backend/.air.toml
