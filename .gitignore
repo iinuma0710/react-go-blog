@@ -32,3 +32,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Golang Air
+backend/tmp/
+backend/post_cmd.txt
+backend/pre_cmd.txt
