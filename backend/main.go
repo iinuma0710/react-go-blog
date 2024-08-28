@@ -4,20 +4,36 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"os"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
-	if err := run(context.Background()); err != nil {
+	// コマンドライン引数でポート番号を指定
+	if len(os.Args) != 2 {
+		log.Printf("need port number\n")
+		os.Exit(1)
+	}
+
+	// 指定されたポートのリッスンを開始
+	p := os.Args[1]
+	l, err := net.Listen("tcp", ":"+p)
+	if err != nil {
+		log.Fatalf("failed to listen port %s: %v", p, err)
+	}
+
+	// run 関数にリッスンしているポートの情報を渡して HTTP サーバを立ち上げる
+	if err := run(context.Background(), l); err != nil {
 		fmt.Printf("failed to terminate server: %v", err)
 	}
 }
 
-func run(ctx context.Context) error {
+func run(ctx context.Context, l net.Listener) error {
 	s := &http.Server{
-		Addr: ":8000",
+		// Addr フィールドは指定しない
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Hello, %s!\n", r.URL.Path[1:])
 		}),
@@ -27,8 +43,8 @@ func run(ctx context.Context) error {
 
 	// eg.Go メソッドで HTTP サーバを起動するゴルーチンを立ち上げる
 	eg.Go(func() error {
-		// http.ErrServerClosed は http.Server.Shutdown() が正常終了したことを示すエラー
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		// Server メソッドで HTTP サーバを立ち上げ
+		if err := s.Serve(l); err != nil && err != http.ErrServerClosed {
 			log.Printf("failed to close: %+v", err)
 			return err
 		}
