@@ -8,30 +8,35 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/iinuma0710/react-go-blog/backend/config"
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
-	// コマンドライン引数でポート番号を指定
-	if len(os.Args) != 2 {
-		log.Printf("need port number\n")
-		os.Exit(1)
-	}
-
-	// 指定されたポートのリッスンを開始
-	p := os.Args[1]
-	l, err := net.Listen("tcp", ":"+p)
-	if err != nil {
-		log.Fatalf("failed to listen port %s: %v", p, err)
-	}
-
-	// run 関数にリッスンしているポートの情報を渡して HTTP サーバを立ち上げる
-	if err := run(context.Background(), l); err != nil {
+	// run 関数を呼び出す
+	if err := run(context.Background()); err != nil {
 		fmt.Printf("failed to terminate server: %v", err)
+		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, l net.Listener) error {
+func run(ctx context.Context) error {
+	// 環境変数で指定された設定値を取得
+	cfg, err := config.New()
+	if err != nil {
+		return err
+	}
+
+	// 環境変数 BACKEND_PORT で設定されたポートのリッスンを開始
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.BckendPort))
+	if err != nil {
+		log.Fatalf("failed to listen port %s: %v", cfg.BckendPort, err)
+	}
+
+	// サーバの URL を表示
+	url := fmt.Sprintf("http://%s", l.Addr().String())
+	log.Printf("start with: %v", url)
+
 	s := &http.Server{
 		// Addr フィールドは指定しない
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

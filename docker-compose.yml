@@ -7,8 +7,10 @@ services:
     container_name: backend_golang_container
     environment:
       - TZ=Asia/Tokyo
+      - BACKEND_ENV=dev
+      - BACKEND_PORT=8000
     ports:
-      - "8000:80"
+      - "8000:8000"
     tty: true
     volumes:
       - ./backend:/app
