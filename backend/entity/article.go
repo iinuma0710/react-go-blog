@@ -12,10 +12,10 @@ const (
 )
 
 type Article struct {
-	ID        ArticleID     `json:"id"`
-	Title     string        `json:"title"`
-	Status    ArticleStatus `json:"status"`
-	CreatedAt time.Time     `json:"crated_at"`
+	ID        ArticleID     `json:"id" db:"id"`
+	Title     string        `json:"title" db:"title"`
+	Status    ArticleStatus `json:"status" db:"status"`
+	CreatedAt time.Time     `json:"crated_at" db:"created_at"`
 }
 
 type Articles []*Article
