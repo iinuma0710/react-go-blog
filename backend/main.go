@@ -36,7 +36,11 @@ func run(ctx context.Context) error {
 	log.Printf("start with: %v", url)
 
 	// ルーティングの設定を取得
-	mux := NewMux()
+	mux, cleanup, err := NewMux(ctx, cfg)
+	defer cleanup()
+	if err != nil {
+		return err
+	}
 
 	// Server 型のインスタンスを生成し、HTTP サーバを起動
 	s := NewServer(l, mux)

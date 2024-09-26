@@ -6,10 +6,12 @@ import (
 
 	"github.com/iinuma0710/react-go-blog/backend/entity"
 	"github.com/iinuma0710/react-go-blog/backend/store"
+	"github.com/jmoiron/sqlx"
 )
 
 type ListArticle struct {
-	Store *store.ArticleStore
+	DB   *sqlx.DB
+	Repo *store.Repository
 }
 
 type article struct {
@@ -21,7 +23,13 @@ type article struct {
 
 func (la *ListArticle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	articles := la.Store.All()
+	articles, err := la.Repo.ListArticles(ctx, la.DB)
+	if err != nil {
+		RespondJSON(ctx, w, &ErrResponse{
+			Message: err.Error(),
+		}, http.StatusInternalServerError)
+		return
+	}
 	rsp := []article{}
 	for _, a := range articles {
 		rsp = append(rsp, article{

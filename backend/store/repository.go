@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/iinuma0710/react-go-blog/backend/clock"
 	"github.com/iinuma0710/react-go-blog/backend/config"
 	"github.com/jmoiron/sqlx"
@@ -25,7 +26,7 @@ func New(ctx context.Context, cfg *config.Config) (*sqlx.DB, func(), error) {
 		),
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, func() {}, err
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)

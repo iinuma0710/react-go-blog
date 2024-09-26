@@ -21,6 +21,8 @@ services:
     tty: true
     volumes:
       - ./backend:/app
+    links:
+      - blog_database
 
   blog_frontend:
     build:
