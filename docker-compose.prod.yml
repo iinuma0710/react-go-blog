@@ -1,0 +1,29 @@
+services:
+  blog_backend:
+    image: backend_golang_image
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: backend_golang_container
+    environment:
+      - TZ=Asia/Tokyo
+    ports:
+      - 8000:80
+    tty: true
+    volumes:
+      - ./backend:/app
+
+  blog_frontend:
+    build:
+      context: .
+      dockerfile: ./docker/frontend/Dockerfile.dev
+    container_name: frontend_next_container
+    environment:
+      - TZ=Asia/Tokyo
+      - WATCHPACK_POLLING=true
+    ports:
+      - 3000:3000
+    tty: true
+    volumes:
+      - ./frontend:/app
+    command: sh -c "yarn install && yarn dev"

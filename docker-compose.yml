@@ -1,18 +1,28 @@
 services:
   blog_backend:
+    image: backend_golang_image
     build:
       context: .
-      dockerfile: ./docker/backend/Dockerfile.dev
+      dockerfile: ./backend/Dockerfile
+      args:
+        - target=dev
     container_name: backend_golang_container
     environment:
       - TZ=Asia/Tokyo
+      - BACKEND_ENV=dev
+      - BACKEND_PORT=8000
+      - BLOG_DATABASE_HOST=blog_database
+      - BLOG_DATABASE_PORT=3306
+      - BLOG_DATABASE_USER=blog
+      - BLOG_DATABASE_PASSWORD=blog
+      - BLOG_DATABASE_DATABASE=blog
     ports:
-      - 8000:8000
+      - "8000:8000"
     tty: true
     volumes:
       - ./backend:/app
-      - ./docker/backend/.air.toml:/app/.air.toml
-    command: sh -c "go mod tidy && air -c .air.toml"
+    links:
+      - blog_database
 
   blog_frontend:
     build:
@@ -23,8 +33,26 @@ services:
       - TZ=Asia/Tokyo
       - WATCHPACK_POLLING=true
     ports:
-      - 3000:3000
+      - "3000:3000"
     tty: true
     volumes:
       - ./frontend:/app
     command: sh -c "yarn install && yarn dev"
+
+  blog_database:
+    image: mysql:lts
+    platform: linux/amd64
+    container_name: database_mysql_container
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD="yes"
+      - MYSQL_USER=blog
+      - MYSQL_PASSWORD=blog
+      - MYSQL_DATABASE=blog
+    volumes:
+      - blog_database_data:/var/lib/mysql
+      - ./backend/_tools/mysql/conf.d:/etc/mysql/conf.d:cached
+    ports:
+      - "3306:3306"
+
+volumes:
+  blog_database_data:

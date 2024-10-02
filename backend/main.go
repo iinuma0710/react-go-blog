@@ -1,15 +1,48 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"net/http"
+	"log"
+	"net"
+	"os"
+
+	"github.com/iinuma0710/react-go-blog/backend/config"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello Golang Server!")
+func main() {
+	// run 関数を呼び出す
+	if err := run(context.Background()); err != nil {
+		fmt.Printf("failed to terminate server: %v", err)
+		os.Exit(1)
+	}
 }
 
-func main() {
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8000", nil)
+func run(ctx context.Context) error {
+	// 環境変数で指定された設定値を取得
+	cfg, err := config.New()
+	if err != nil {
+		return err
+	}
+
+	// 環境変数 BACKEND_PORT で設定されたポートのリッスンを開始
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.BckendPort))
+	if err != nil {
+		log.Fatalf("failed to listen port %d: %v", cfg.BckendPort, err)
+	}
+
+	// サーバの URL を表示
+	url := fmt.Sprintf("http://%s", l.Addr().String())
+	log.Printf("start with: %v", url)
+
+	// ルーティングの設定を取得
+	mux, cleanup, err := NewMux(ctx, cfg)
+	defer cleanup()
+	if err != nil {
+		return err
+	}
+
+	// Server 型のインスタンスを生成し、HTTP サーバを起動
+	s := NewServer(l, mux)
+	return s.Run(ctx)
 }
