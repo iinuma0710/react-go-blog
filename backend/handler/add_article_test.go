@@ -2,13 +2,14 @@ package handler
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/iinuma0710/react-go-blog/backend/entity"
-	"github.com/iinuma0710/react-go-blog/backend/store"
 	"github.com/iinuma0710/react-go-blog/backend/testutil"
 )
 
@@ -34,7 +35,7 @@ func TestAddArticle(t *testing.T) {
 		"badRequest": {
 			reqFile: "testdata/add_article/bad_req.json.golden",
 			want: want{
-				status:  http.StatusOK,
+				status:  http.StatusBadRequest,
 				rspFile: "testdata/add_article/bad_rsp.json.golden",
 			},
 		},
@@ -52,10 +53,16 @@ func TestAddArticle(t *testing.T) {
 				bytes.NewReader(testutil.LoadFile(t, tt.reqFile)),
 			)
 
+			moq := &AddArticleServiceMock{}
+			moq.AddArticleFunc = func(ctx context.Context, title string) (*entity.Article, error) {
+				if tt.want.status == http.StatusOK {
+					return &entity.Article{ID: 1}, nil
+				}
+				return nil, errors.New("error from mock")
+			}
+
 			sut := AddArticle{
-				Store: &store.ArticleStore{
-					Articles: map[entity.ArticleID]*entity.Article{},
-				},
+				Service:   moq,
 				Validator: validator.New(),
 			}
 			sut.ServeHTTP(w, r)

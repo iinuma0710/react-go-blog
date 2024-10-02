@@ -6,13 +6,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/iinuma0710/react-go-blog/backend/entity"
-	"github.com/iinuma0710/react-go-blog/backend/store"
-	"github.com/jmoiron/sqlx"
 )
 
 type AddArticle struct {
-	DB        *sqlx.DB
-	Repo      *store.Repository
+	Service   AddArticleService
 	Validator *validator.Validate
 }
 
@@ -42,13 +39,7 @@ func (aa *AddArticle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 新しい Article 型の値を作成
-	t := &entity.Article{
-		Title:  b.Title,
-		Status: b.Status,
-	}
-
-	// データベースに記事を追加
-	err := aa.Repo.AddArticle(ctx, aa.DB, t)
+	t, err := aa.Service.AddArticle(ctx, b.Title)
 	if err != nil {
 		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),

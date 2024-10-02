@@ -9,6 +9,7 @@ import (
 	"github.com/iinuma0710/react-go-blog/backend/clock"
 	"github.com/iinuma0710/react-go-blog/backend/config"
 	"github.com/iinuma0710/react-go-blog/backend/handler"
+	"github.com/iinuma0710/react-go-blog/backend/service"
 	"github.com/iinuma0710/react-go-blog/backend/store"
 )
 
@@ -34,11 +35,16 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 	r := store.Repository{Clocker: clock.RealClocker{}}
 
 	// 記事を追加するためのエンドポイント
-	aa := &handler.AddArticle{DB: db, Repo: &r, Validator: v}
+	aa := &handler.AddArticle{
+		Service:   &service.AddArticle{DB: db, Repo: &r},
+		Validator: v,
+	}
 	mux.Post("/articles", aa.ServeHTTP)
 
 	// 記事一覧を取得するためのエンドポイント
-	la := &handler.ListArticle{DB: db, Repo: &r}
+	la := &handler.ListArticle{
+		Service: &service.ListArticle{DB: db, Repo: &r},
+	}
 	mux.Get("/articles", la.ServeHTTP)
 
 	return mux, cleanup, nil
