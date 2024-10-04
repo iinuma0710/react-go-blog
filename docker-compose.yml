@@ -25,9 +25,7 @@ services:
       - blog_database
 
   blog_frontend:
-    build:
-      context: .
-      dockerfile: ./docker/frontend/Dockerfile.dev
+    image: node:20.16-slim
     container_name: frontend_next_container
     environment:
       - TZ=Asia/Tokyo
@@ -37,6 +35,7 @@ services:
     tty: true
     volumes:
       - ./frontend:/app
+    working_dir: /app
     command: sh -c "yarn install && yarn dev"
 
   blog_database:

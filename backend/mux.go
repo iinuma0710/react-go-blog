@@ -26,7 +26,7 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 	v := validator.New()
 
 	// データベースに接続
-	db, cleanup, err := store.New(ctx, cfg)
+	db, cleanup, err := store.New(ctx, cfg, 30)
 	if err != nil {
 		return nil, cleanup, err
 	}

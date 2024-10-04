@@ -12,31 +12,53 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func New(ctx context.Context, cfg *config.Config) (*sqlx.DB, func(), error) {
-	// database/sql の Open メソッドで接続
-	db, err := sql.Open("mysql",
-		fmt.Sprintf(
-			// parseTime=true は時刻情報の取得に必須
-			"%s:%s@tcp(%s:%d)/%s?parseTime=true",
-			cfg.DBUser,
-			cfg.DBPassword,
-			cfg.DBHost,
-			cfg.DBPort,
-			cfg.DBName,
-		),
+func New(ctx context.Context, cfg *config.Config, maxTrial int) (*sqlx.DB, func(), error) {
+	// 接続先のデータベースのパス
+	path := fmt.Sprintf(
+		// parseTime=true は時刻情報の取得に必須
+		"%s:%s@tcp(%s:%d)/%s?parseTime=true",
+		cfg.DBUser,
+		cfg.DBPassword,
+		cfg.DBHost,
+		cfg.DBPort,
+		cfg.DBName,
 	)
+	
+	var db *sql.DB
+	var err error
+	for i := 0; i < maxTrial; i++ {
+		fmt.Printf("mysql connection trial: %d", i + 1)
+
+		// database/sql の Open メソッドで接続
+		db, err = sql.Open("mysql", path)
+		if err != nil {
+			fmt.Printf("sql.Open method failed: %v", err)
+			time.Sleep(time.Second * 2)
+			continue
+		}
+
+		// *sql.DB.PingContest メソッドで疎通確認
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		if err := db.PingContext(ctx); err != nil {
+			fmt.Printf("*sql.DB.PingContext method failed: %v", err)
+			time.Sleep(time.Second * 2)
+			continue
+		}
+
+		// ここまでエラーがなければ接続確認できているので接続試行のループを抜ける
+		break
+	}
+
+	// 何らかのエラーで接続できなかった場合の処理
 	if err != nil {
-		return nil, func() {}, err
+		if db != nil {
+			return nil, func() { _ = db.Close() }, fmt.Errorf("Cannot open sql connection: %v", err)
+		} else {
+			return nil, func() {}, fmt.Errorf("Cannot confirm sql connection: %v", err)
+		}
 	}
-
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-
-	// *sql.DB.PingContest メソッドで疎通確認
-	if err := db.PingContext(ctx); err != nil {
-		return nil, func() { _ = db.Close() }, err
-	}
-
+	
 	// *sqlx.DB に変換して返す
 	xdb := sqlx.NewDb(db, "mysql")
 	return xdb, func() { _ = db.Close() }, nil
