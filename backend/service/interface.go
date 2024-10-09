@@ -15,3 +15,7 @@ type ArticleAdder interface {
 type ArticleLister interface {
 	ListArticles(ctx context.Context, db store.Queryer) (entity.Articles, error)
 }
+
+type UserRegister interface {
+	RegisterUser(ctx context.Context, db store.Execer, u *entity.User) error
+}

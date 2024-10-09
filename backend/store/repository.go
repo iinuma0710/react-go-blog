@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +11,15 @@ import (
 	"github.com/iinuma0710/react-go-blog/backend/clock"
 	"github.com/iinuma0710/react-go-blog/backend/config"
 	"github.com/jmoiron/sqlx"
+)
+
+const (
+	// MySQL でレコードに重複があった場合のエラー
+	ErrCodeMySQLDuplicateEntry = 1062
+)
+
+var (
+	ErrAlreadyEntry = errors.New("duplicate entry")
 )
 
 func New(ctx context.Context, cfg *config.Config, maxTrial int) (*sqlx.DB, func(), error) {
@@ -23,11 +33,11 @@ func New(ctx context.Context, cfg *config.Config, maxTrial int) (*sqlx.DB, func(
 		cfg.DBPort,
 		cfg.DBName,
 	)
-	
+
 	var db *sql.DB
 	var err error
 	for i := 0; i < maxTrial; i++ {
-		fmt.Printf("mysql connection trial: %d", i + 1)
+		fmt.Printf("mysql connection trial: %d", i+1)
 
 		// database/sql の Open メソッドで接続
 		db, err = sql.Open("mysql", path)
@@ -53,12 +63,12 @@ func New(ctx context.Context, cfg *config.Config, maxTrial int) (*sqlx.DB, func(
 	// 何らかのエラーで接続できなかった場合の処理
 	if err != nil {
 		if db != nil {
-			return nil, func() { _ = db.Close() }, fmt.Errorf("Cannot open sql connection: %v", err)
+			return nil, func() { _ = db.Close() }, fmt.Errorf("cannot open sql connection: %v", err)
 		} else {
-			return nil, func() {}, fmt.Errorf("Cannot confirm sql connection: %v", err)
+			return nil, func() {}, fmt.Errorf("cannot confirm sql connection: %v", err)
 		}
 	}
-	
+
 	// *sqlx.DB に変換して返す
 	xdb := sqlx.NewDb(db, "mysql")
 	return xdb, func() { _ = db.Close() }, nil

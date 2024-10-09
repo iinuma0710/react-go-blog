@@ -2,7 +2,6 @@ CREATE TABLE `user`
 (
     `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ユーザの識別子',
     `name`       VARCHAR(20) NOT NULL COMMENT 'ユーザ名',
-    `email`      VARCHAR(80) NOT NULL COMMENT 'メールアドレス',
     `password`   VARCHAR(80) NOT NULL COMMENT 'パスワードハッシュ',
     `role`       VARCHAR(80) NOT NULL COMMENT 'ユーザのロール',
     `created_at` DATETIME(6) NOT NULL COMMENT 'レコードの作成日時',
