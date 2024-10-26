@@ -12,6 +12,8 @@ type Config struct {
 	DBUser     string `env:"BLOG_DATABASE_USER" envDefault:"blog"`
 	DBPassword string `env:"BLOG_DATABASE_PASSWORD" envDefault:"blog"`
 	DBName     string `env:"BLOG_DATABASE_DATABASE" envDefault:"blog"`
+	RedisHost  string `env:"BLOG_REDIS_HOST" envDefault:"blog_redis"`
+	RedisPort  int    `env:"BLOG_REDIS_PORT" envDefault:"6379"`
 }
 
 func New() (*Config, error) {

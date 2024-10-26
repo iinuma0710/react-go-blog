@@ -16,6 +16,8 @@ services:
       - BLOG_DATABASE_USER=blog
       - BLOG_DATABASE_PASSWORD=blog
       - BLOG_DATABASE_DATABASE=blog
+      - BLOG_REDIS_HOST=blog_redis
+      - BLOG_REDIS_PORT=6379
     ports:
       - "8000:8000"
     tty: true
@@ -53,5 +55,14 @@ services:
     ports:
       - "3306:3306"
 
+  blog_redis:
+    image: redis:7.4.1
+    container_name: blog_redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - blog_redis_data:/data
+
 volumes:
   blog_database_data:
+  blog_redis_data:
